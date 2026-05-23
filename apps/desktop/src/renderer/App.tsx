@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Add24Regular, Dismiss24Regular, Save24Regular, Send24Regular } from "@fluentui/react-icons";
 import { Button, Spinner, Tooltip } from "@fluentui/react-components";
 import { EnvironmentSelect } from "./components/EnvironmentSelect";
@@ -16,7 +16,10 @@ export default function App() {
   const sendActiveRequest = useWorkspaceStore((state) => state.sendActiveRequest);
   const dismissToast = useWorkspaceStore((state) => state.dismissToast);
 
+  const initDone = useRef(false);
   useEffect(() => {
+    if (initDone.current) return;
+    initDone.current = true;
     void initialize();
   }, [initialize]);
 

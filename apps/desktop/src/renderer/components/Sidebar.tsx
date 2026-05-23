@@ -35,7 +35,7 @@ const sidebarViews: Array<{
 
 export function Sidebar() {
   const workspace = useWorkspaceStore((state) => state.workspace);
-  const activeTab = useWorkspaceStore((state) => state.activeTab());
+  const activeTab = useWorkspaceStore((state) => state.workspace.tabs.find((t) => t.id === state.workspace.activeTabId) ?? null);
   const setSidebarView = useWorkspaceStore((state) => state.setSidebarView);
   const addCollection = useWorkspaceStore((state) => state.addCollection);
   const renameCollection = useWorkspaceStore((state) => state.renameCollection);

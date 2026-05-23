@@ -204,11 +204,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   closeTab: (tabId) => {
+    if (get().workspace.tabs.length === 1) return;
     mutateWorkspace(get, set, (workspace) => {
-      if (workspace.tabs.length === 1) {
-        return;
-      }
-
       const index = workspace.tabs.findIndex((tab) => tab.id === tabId);
       workspace.tabs = workspace.tabs.filter((tab) => tab.id !== tabId);
       if (workspace.activeTabId === tabId) {

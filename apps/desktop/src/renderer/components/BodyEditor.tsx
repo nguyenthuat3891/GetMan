@@ -61,7 +61,7 @@ export function BodyEditor({ request, onChange }: BodyEditorProps) {
             defaultLanguage={request.body.type === "xml" ? "xml" : request.body.type === "text" ? "plaintext" : "json"}
             language={request.body.type === "xml" ? "xml" : request.body.type === "text" ? "plaintext" : "json"}
             value={request.body.raw}
-            onChange={(value) => setBody({ raw: value ?? "" })}
+            onChange={(value) => { if (value !== undefined && value !== request.body.raw) setBody({ raw: value }); }}
             options={{
               minimap: { enabled: false },
               fontSize: 13,

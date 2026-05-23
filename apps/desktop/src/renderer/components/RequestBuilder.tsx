@@ -27,7 +27,7 @@ const methods: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 export function RequestBuilder() {
   const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>("params");
   const workspace = useWorkspaceStore((state) => state.workspace);
-  const activeTab = useWorkspaceStore((state) => state.activeTab());
+  const activeTab = useWorkspaceStore((state) => state.workspace.tabs.find((t) => t.id === state.workspace.activeTabId) ?? null);
   const sending = useWorkspaceStore((state) => state.sending);
   const setActiveTab = useWorkspaceStore((state) => state.setActiveTab);
   const closeTab = useWorkspaceStore((state) => state.closeTab);

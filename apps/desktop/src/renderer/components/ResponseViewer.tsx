@@ -15,7 +15,7 @@ const responseTabs: Array<{ id: ResponseTab; label: string }> = [
 
 export function ResponseViewer() {
   const [activeResponseTab, setActiveResponseTab] = useState<ResponseTab>("body");
-  const activeTab = useWorkspaceStore((state) => state.activeTab());
+  const activeTab = useWorkspaceStore((state) => state.workspace.tabs.find((t) => t.id === state.workspace.activeTabId) ?? null);
   const response = activeTab?.response ?? null;
   const body = response?.body ?? "";
   const prettyBody = useMemo(() => tryFormatJson(body), [body]);
