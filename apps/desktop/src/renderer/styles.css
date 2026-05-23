@@ -139,6 +139,7 @@ textarea {
   position: relative;
   display: grid;
   grid-template-columns: var(--sidebar-width) 6px minmax(0, 1fr);
+  grid-auto-rows: 1fr;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -196,8 +197,8 @@ textarea {
 }
 
 .sidebar-panel {
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow: hidden;
   background: var(--color-bg-sidebar);
@@ -239,6 +240,7 @@ textarea {
 }
 
 .sidebar-tabs {
+  flex: 0 0 auto;
   gap: 4px;
   padding: 8px;
   border-bottom: 1px solid var(--color-border);
@@ -292,6 +294,8 @@ textarea {
 }
 
 .sidebar-content {
+  flex: 1 1 0;
+  min-height: 0;
   padding: 10px 8px 18px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -344,6 +348,31 @@ textarea {
 .tree-name-input:focus {
   border-color: var(--color-border);
   background: #fff;
+}
+
+.tree-toggle {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.tree-toggle:hover {
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.tree-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 120ms ease;
 }
 
 .tree-icon-button {

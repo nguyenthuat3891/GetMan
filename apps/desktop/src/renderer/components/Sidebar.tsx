@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import {
   Add24Regular,
   Box24Regular,
+  ChevronDown20Regular,
+  ChevronRight20Regular,
   Clock24Regular,
   FolderAdd24Regular,
   Folder24Regular,
@@ -177,30 +180,104 @@ function CollectionsView({
       </div>
 
       {collections.map((collection) => (
-        <div className="tree-block" key={collection.id}>
-          <div className="tree-heading">
-            <Box24Regular className="collection-icon" />
-            <input
-              className="tree-name-input"
-              value={collection.name}
-              onChange={(event) => onRenameCollection(collection.id, event.target.value)}
-              aria-label="Collection name"
-            />
-            <Tooltip content="Add folder" relationship="label">
-              <button type="button" className="tree-icon-button" onClick={() => onAddFolder(collection.id, null)}>
-                <FolderAdd24Regular />
-              </button>
-            </Tooltip>
-            <ItemActions
-              name={collection.name}
-              onExport={() =>
-                downloadJson(`${sanitizeFileName(collection.name)}.postman_collection.json`, onExportCollection(collection.id))
-              }
-              onRename={(name) => onRenameCollection(collection.id, name)}
-              onDuplicate={() => onDuplicateCollection(collection.id)}
-              onDelete={() => onDeleteCollection(collection.id)}
-            />
-          </div>
+        <CollectionBlock
+          key={collection.id}
+          collection={collection}
+          activeRequestId={activeRequestId}
+          onAddFolder={onAddFolder}
+          onRenameCollection={onRenameCollection}
+          onRenameFolder={onRenameFolder}
+          onRenameRequest={onRenameRequest}
+          onDuplicateCollection={onDuplicateCollection}
+          onDuplicateFolder={onDuplicateFolder}
+          onDuplicateRequest={onDuplicateRequest}
+          onDeleteCollection={onDeleteCollection}
+          onDeleteFolder={onDeleteFolder}
+          onDeleteRequest={onDeleteRequest}
+          onExportCollection={onExportCollection}
+          onExportFolder={onExportFolder}
+          onExportRequest={onExportRequest}
+          onOpenRequest={onOpenRequest}
+        />
+      ))}
+    </>
+  );
+}
+
+function CollectionBlock({
+  collection,
+  activeRequestId,
+  onAddFolder,
+  onRenameCollection,
+  onRenameFolder,
+  onRenameRequest,
+  onDuplicateCollection,
+  onDuplicateFolder,
+  onDuplicateRequest,
+  onDeleteCollection,
+  onDeleteFolder,
+  onDeleteRequest,
+  onExportCollection,
+  onExportFolder,
+  onExportRequest,
+  onOpenRequest
+}: {
+  collection: CollectionNode;
+  activeRequestId: string | null;
+  onAddFolder: (collectionId: string, parentId: string | null) => void;
+  onRenameCollection: (collectionId: string, name: string) => void;
+  onRenameFolder: (folderId: string, name: string) => void;
+  onRenameRequest: (requestId: string, name: string) => void;
+  onDuplicateCollection: (collectionId: string) => void;
+  onDuplicateFolder: (folderId: string) => void;
+  onDuplicateRequest: (requestId: string) => void;
+  onDeleteCollection: (collectionId: string) => void;
+  onDeleteFolder: (folderId: string) => void;
+  onDeleteRequest: (requestId: string) => void;
+  onExportCollection: (collectionId: string) => string;
+  onExportFolder: (folderId: string) => string;
+  onExportRequest: (requestId: string) => string;
+  onOpenRequest: (request: ApiRequest) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const hasChildren = collection.folders.length > 0 || collection.requests.length > 0;
+
+  return (
+    <div className="tree-block">
+      <div className="tree-heading">
+        <button
+          type="button"
+          className="tree-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand" : "Collapse"}
+          style={{ visibility: hasChildren ? "visible" : "hidden" }}
+        >
+          {collapsed ? <ChevronRight20Regular /> : <ChevronDown20Regular />}
+        </button>
+        <Box24Regular className="collection-icon" />
+        <input
+          className="tree-name-input"
+          value={collection.name}
+          onChange={(event) => onRenameCollection(collection.id, event.target.value)}
+          aria-label="Collection name"
+        />
+        <Tooltip content="Add folder" relationship="label">
+          <button type="button" className="tree-icon-button" onClick={() => onAddFolder(collection.id, null)}>
+            <FolderAdd24Regular />
+          </button>
+        </Tooltip>
+        <ItemActions
+          name={collection.name}
+          onExport={() =>
+            downloadJson(`${sanitizeFileName(collection.name)}.postman_collection.json`, onExportCollection(collection.id))
+          }
+          onRename={(name) => onRenameCollection(collection.id, name)}
+          onDuplicate={() => onDuplicateCollection(collection.id)}
+          onDelete={() => onDeleteCollection(collection.id)}
+        />
+      </div>
+      {!collapsed && (
+        <>
           {collection.folders.map((folder) => (
             <FolderTree
               key={folder.id}
@@ -230,9 +307,9 @@ function CollectionsView({
               onOpen={() => onOpenRequest(request)}
             />
           ))}
-        </div>
-      ))}
-    </>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -263,9 +340,21 @@ function FolderTree({
   onExportRequest: (requestId: string) => string;
   onOpenRequest: (request: ApiRequest) => void;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const hasChildren = folder.folders.length > 0 || folder.requests.length > 0;
+
   return (
     <div>
       <div className="folder-row">
+        <button
+          type="button"
+          className="tree-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand" : "Collapse"}
+          style={{ visibility: hasChildren ? "visible" : "hidden" }}
+        >
+          {collapsed ? <ChevronRight20Regular /> : <ChevronDown20Regular />}
+        </button>
         <Folder24Regular className="favorite-icon" />
         <input
           className="tree-name-input"
@@ -288,37 +377,39 @@ function FolderTree({
           onDelete={() => onDeleteFolder(folder.id)}
         />
       </div>
-      <div className="folder-children">
-        {folder.folders.map((child) => (
-          <FolderTree
-            key={child.id}
-            folder={child}
-            activeRequestId={activeRequestId}
-            onAddFolder={onAddFolder}
-            onRenameFolder={onRenameFolder}
-            onRenameRequest={onRenameRequest}
-            onDuplicateFolder={onDuplicateFolder}
-            onDuplicateRequest={onDuplicateRequest}
-            onDeleteFolder={onDeleteFolder}
-            onDeleteRequest={onDeleteRequest}
-            onExportFolder={onExportFolder}
-            onExportRequest={onExportRequest}
-            onOpenRequest={onOpenRequest}
-          />
-        ))}
-        {folder.requests.map((request) => (
-          <RequestRow
-            key={request.id}
-            request={request}
-            active={request.id === activeRequestId}
-            onRename={onRenameRequest}
-            onDuplicate={onDuplicateRequest}
-            onDelete={onDeleteRequest}
-            onExport={onExportRequest}
-            onOpen={() => onOpenRequest(request)}
-          />
-        ))}
-      </div>
+      {!collapsed && hasChildren && (
+        <div className="folder-children">
+          {folder.folders.map((child) => (
+            <FolderTree
+              key={child.id}
+              folder={child}
+              activeRequestId={activeRequestId}
+              onAddFolder={onAddFolder}
+              onRenameFolder={onRenameFolder}
+              onRenameRequest={onRenameRequest}
+              onDuplicateFolder={onDuplicateFolder}
+              onDuplicateRequest={onDuplicateRequest}
+              onDeleteFolder={onDeleteFolder}
+              onDeleteRequest={onDeleteRequest}
+              onExportFolder={onExportFolder}
+              onExportRequest={onExportRequest}
+              onOpenRequest={onOpenRequest}
+            />
+          ))}
+          {folder.requests.map((request) => (
+            <RequestRow
+              key={request.id}
+              request={request}
+              active={request.id === activeRequestId}
+              onRename={onRenameRequest}
+              onDuplicate={onDuplicateRequest}
+              onDelete={onDeleteRequest}
+              onExport={onExportRequest}
+              onOpen={() => onOpenRequest(request)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
