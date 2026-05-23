@@ -58,6 +58,7 @@ export function Sidebar() {
   const setActiveEnvironment = useWorkspaceStore((state) => state.setActiveEnvironment);
   const updateEnvironment = useWorkspaceStore((state) => state.updateEnvironment);
   const updateEnvironmentRows = useWorkspaceStore((state) => state.updateEnvironmentRows);
+  const toggleFavorite = useWorkspaceStore((state) => state.toggleFavorite);
 
   return (
     <aside className="panel sidebar-panel">
@@ -96,6 +97,7 @@ export function Sidebar() {
             onExportFolder={exportFolderFile}
             onExportRequest={exportRequestFile}
             onOpenRequest={openRequest}
+            onToggleFavorite={toggleFavorite}
           />
         )}
 
@@ -123,6 +125,7 @@ export function Sidebar() {
             onDuplicate={duplicateRequest}
             onDelete={deleteRequest}
             onExport={exportRequestFile}
+            onToggleFavorite={toggleFavorite}
           />
         )}
       </div>
@@ -147,7 +150,8 @@ function CollectionsView({
   onExportCollection,
   onExportFolder,
   onExportRequest,
-  onOpenRequest
+  onOpenRequest,
+  onToggleFavorite
 }: {
   collections: CollectionNode[];
   activeRequestId: string | null;
@@ -166,6 +170,7 @@ function CollectionsView({
   onExportFolder: (folderId: string) => string;
   onExportRequest: (requestId: string) => string;
   onOpenRequest: (request: ApiRequest) => void;
+  onToggleFavorite: (requestId: string) => void;
 }) {
   return (
     <>
@@ -198,6 +203,7 @@ function CollectionsView({
           onExportFolder={onExportFolder}
           onExportRequest={onExportRequest}
           onOpenRequest={onOpenRequest}
+          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </>
@@ -220,7 +226,8 @@ function CollectionBlock({
   onExportCollection,
   onExportFolder,
   onExportRequest,
-  onOpenRequest
+  onOpenRequest,
+  onToggleFavorite
 }: {
   collection: CollectionNode;
   activeRequestId: string | null;
@@ -238,9 +245,29 @@ function CollectionBlock({
   onExportFolder: (folderId: string) => string;
   onExportRequest: (requestId: string) => string;
   onOpenRequest: (request: ApiRequest) => void;
+  onToggleFavorite: (requestId: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(collection.name);
   const hasChildren = collection.folders.length > 0 || collection.requests.length > 0;
+
+  const startRename = () => {
+    setEditName(collection.name);
+    setIsEditing(true);
+  };
+
+  const commitRename = () => {
+    const trimmed = editName.trim();
+    if (trimmed) onRenameCollection(collection.id, trimmed);
+    else setEditName(collection.name);
+    setIsEditing(false);
+  };
+
+  const cancelRename = () => {
+    setEditName(collection.name);
+    setIsEditing(false);
+  };
 
   return (
     <div className="tree-block">
@@ -255,12 +282,23 @@ function CollectionBlock({
           {collapsed ? <ChevronRight20Regular /> : <ChevronDown20Regular />}
         </button>
         <Box24Regular className="collection-icon" />
-        <input
-          className="tree-name-input"
-          value={collection.name}
-          onChange={(event) => onRenameCollection(collection.id, event.target.value)}
-          aria-label="Collection name"
-        />
+        {isEditing ? (
+          <input
+            className="tree-name-input"
+            value={editName}
+            autoFocus
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitRename();
+              if (e.key === "Escape") cancelRename();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Collection name"
+          />
+        ) : (
+          <span className="tree-name-text">{collection.name}</span>
+        )}
         <Tooltip content="Add folder" relationship="label">
           <button type="button" className="tree-icon-button" onClick={() => onAddFolder(collection.id, null)}>
             <FolderAdd24Regular />
@@ -271,7 +309,7 @@ function CollectionBlock({
           onExport={() =>
             downloadJson(`${sanitizeFileName(collection.name)}.postman_collection.json`, onExportCollection(collection.id))
           }
-          onRename={(name) => onRenameCollection(collection.id, name)}
+          onStartRename={startRename}
           onDuplicate={() => onDuplicateCollection(collection.id)}
           onDelete={() => onDeleteCollection(collection.id)}
         />
@@ -293,6 +331,7 @@ function CollectionBlock({
               onExportFolder={onExportFolder}
               onExportRequest={onExportRequest}
               onOpenRequest={onOpenRequest}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
           {collection.requests.map((request) => (
@@ -305,6 +344,7 @@ function CollectionBlock({
               onDelete={onDeleteRequest}
               onExport={onExportRequest}
               onOpen={() => onOpenRequest(request)}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </>
@@ -325,7 +365,8 @@ function FolderTree({
   onDeleteRequest,
   onExportFolder,
   onExportRequest,
-  onOpenRequest
+  onOpenRequest,
+  onToggleFavorite
 }: {
   folder: FolderNode;
   activeRequestId: string | null;
@@ -339,9 +380,29 @@ function FolderTree({
   onExportFolder: (folderId: string) => string;
   onExportRequest: (requestId: string) => string;
   onOpenRequest: (request: ApiRequest) => void;
+  onToggleFavorite: (requestId: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(folder.name);
   const hasChildren = folder.folders.length > 0 || folder.requests.length > 0;
+
+  const startRename = () => {
+    setEditName(folder.name);
+    setIsEditing(true);
+  };
+
+  const commitRename = () => {
+    const trimmed = editName.trim();
+    if (trimmed) onRenameFolder(folder.id, trimmed);
+    else setEditName(folder.name);
+    setIsEditing(false);
+  };
+
+  const cancelRename = () => {
+    setEditName(folder.name);
+    setIsEditing(false);
+  };
 
   return (
     <div>
@@ -356,12 +417,23 @@ function FolderTree({
           {collapsed ? <ChevronRight20Regular /> : <ChevronDown20Regular />}
         </button>
         <Folder24Regular className="favorite-icon" />
-        <input
-          className="tree-name-input"
-          value={folder.name}
-          onChange={(event) => onRenameFolder(folder.id, event.target.value)}
-          aria-label="Folder name"
-        />
+        {isEditing ? (
+          <input
+            className="tree-name-input folder-name-input"
+            value={editName}
+            autoFocus
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitRename();
+              if (e.key === "Escape") cancelRename();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Folder name"
+          />
+        ) : (
+          <span className="tree-name-text folder-name-text">{folder.name}</span>
+        )}
         <Tooltip content="Add subfolder" relationship="label">
           <button type="button" className="tree-icon-button" onClick={() => onAddFolder(folder.collectionId, folder.id)}>
             <FolderAdd24Regular />
@@ -372,7 +444,7 @@ function FolderTree({
           onExport={() =>
             downloadJson(`${sanitizeFileName(folder.name)}.postman_collection.json`, onExportFolder(folder.id))
           }
-          onRename={(name) => onRenameFolder(folder.id, name)}
+          onStartRename={startRename}
           onDuplicate={() => onDuplicateFolder(folder.id)}
           onDelete={() => onDeleteFolder(folder.id)}
         />
@@ -394,6 +466,7 @@ function FolderTree({
               onExportFolder={onExportFolder}
               onExportRequest={onExportRequest}
               onOpenRequest={onOpenRequest}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
           {folder.requests.map((request) => (
@@ -406,6 +479,7 @@ function FolderTree({
               onDelete={onDeleteRequest}
               onExport={onExportRequest}
               onOpen={() => onOpenRequest(request)}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </div>
@@ -421,7 +495,8 @@ function RequestRow({
   onRename,
   onDuplicate,
   onDelete,
-  onExport
+  onExport,
+  onToggleFavorite
 }: {
   request: ApiRequest;
   active: boolean;
@@ -430,22 +505,60 @@ function RequestRow({
   onDuplicate: (requestId: string) => void;
   onDelete: (requestId: string) => void;
   onExport: (requestId: string) => string;
+  onToggleFavorite: (requestId: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(request.name);
+
+  const startRename = () => {
+    setEditName(request.name);
+    setIsEditing(true);
+  };
+
+  const commitRename = () => {
+    const trimmed = editName.trim();
+    if (trimmed) onRename(request.id, trimmed);
+    else setEditName(request.name);
+    setIsEditing(false);
+  };
+
+  const cancelRename = () => {
+    setEditName(request.name);
+    setIsEditing(false);
+  };
+
   return (
     <div className={`request-row ${active ? "active" : ""}`}>
-      <button type="button" className="request-main" onClick={onOpen}>
-        <span className={`method-pill method-${request.method.toLowerCase()}`}>{request.method}</span>
-        <span className="truncate">{request.name}</span>
-      </button>
-      {request.favorite ? <Star24Filled className="favorite-icon" /> : null}
+      {isEditing ? (
+        <input
+          className="request-rename-input"
+          value={editName}
+          autoFocus
+          onChange={(e) => setEditName(e.target.value)}
+          onBlur={commitRename}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitRename();
+            if (e.key === "Escape") cancelRename();
+          }}
+          aria-label="Request name"
+        />
+      ) : (
+        <button type="button" className="request-main" onClick={onOpen}>
+          <span className={`method-pill method-${request.method.toLowerCase()}`}>{request.method}</span>
+          <span className="truncate">{request.name}</span>
+        </button>
+      )}
+      {request.favorite && !isEditing ? <Star24Filled className="favorite-icon" /> : null}
       <ItemActions
         name={request.name}
         onExport={() =>
           downloadJson(`${sanitizeFileName(request.name)}.postman_collection.json`, onExport(request.id))
         }
-        onRename={(name) => onRename(request.id, name)}
+        onStartRename={startRename}
         onDuplicate={() => onDuplicate(request.id)}
         onDelete={() => onDelete(request.id)}
+        onToggleFavorite={() => onToggleFavorite(request.id)}
+        isFavorite={request.favorite}
       />
     </div>
   );
@@ -454,23 +567,20 @@ function RequestRow({
 function ItemActions({
   name,
   onExport,
-  onRename,
+  onStartRename,
   onDuplicate,
-  onDelete
+  onDelete,
+  onToggleFavorite,
+  isFavorite
 }: {
   name: string;
   onExport: () => void;
-  onRename: (name: string) => void;
+  onStartRename: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onToggleFavorite?: () => void;
+  isFavorite?: boolean;
 }) {
-  const rename = () => {
-    const next = window.prompt("Rename", name);
-    if (next?.trim()) {
-      onRename(next.trim());
-    }
-  };
-
   const remove = () => {
     if (window.confirm(`Delete "${name}" and all children?`)) {
       onDelete();
@@ -487,8 +597,13 @@ function ItemActions({
       <MenuPopover>
         <MenuList>
           <MenuItem onClick={onExport}>Export</MenuItem>
-          <MenuItem onClick={rename}>Rename</MenuItem>
+          <MenuItem onClick={onStartRename}>Rename</MenuItem>
           <MenuItem onClick={onDuplicate}>Duplicate</MenuItem>
+          {onToggleFavorite && (
+            <MenuItem onClick={onToggleFavorite}>
+              {isFavorite ? "Remove from favorites" : "Add to favorites"}
+            </MenuItem>
+          )}
           <MenuItem onClick={remove}>Delete</MenuItem>
         </MenuList>
       </MenuPopover>
@@ -609,7 +724,8 @@ function FavoritesView({
   onRename,
   onDuplicate,
   onDelete,
-  onExport
+  onExport,
+  onToggleFavorite
 }: {
   collections: CollectionNode[];
   activeRequestId: string | null;
@@ -618,6 +734,7 @@ function FavoritesView({
   onDuplicate: (requestId: string) => void;
   onDelete: (requestId: string) => void;
   onExport: (requestId: string) => string;
+  onToggleFavorite: (requestId: string) => void;
 }) {
   const favorites = collectFavorites(collections);
 
@@ -643,6 +760,7 @@ function FavoritesView({
           onDelete={onDelete}
           onExport={onExport}
           onOpen={() => onOpen(request)}
+          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </>

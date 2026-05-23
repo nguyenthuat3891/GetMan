@@ -2,9 +2,7 @@ import { useState } from "react";
 import {
   Dismiss24Regular,
   Save24Regular,
-  Send24Regular,
-  Star24Filled,
-  Star24Regular
+  Send24Regular
 } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import type { ApiRequest, HttpMethod } from "@core/types";
@@ -36,7 +34,6 @@ export function RequestBuilder() {
   const updateActiveDraft = useWorkspaceStore((state) => state.updateActiveDraft);
   const saveActiveRequest = useWorkspaceStore((state) => state.saveActiveRequest);
   const sendActiveRequest = useWorkspaceStore((state) => state.sendActiveRequest);
-  const toggleFavorite = useWorkspaceStore((state) => state.toggleFavorite);
 
   if (!activeTab) {
     return (
@@ -83,20 +80,6 @@ export function RequestBuilder() {
               </span>
             </button>
           ))}
-        </div>
-
-        <div className="name-line">
-          <input
-            className="form-control"
-            value={request.name}
-            onChange={(event) => patchRequest({ name: event.target.value })}
-            aria-label="Request name"
-          />
-          <Tooltip content={request.favorite ? "Remove favorite" : "Add favorite"} relationship="label">
-            <button type="button" className="icon-only" onClick={() => toggleFavorite(request.id)}>
-              {request.favorite ? <Star24Filled className="favorite-icon" /> : <Star24Regular />}
-            </button>
-          </Tooltip>
         </div>
 
         <div className="request-line">
