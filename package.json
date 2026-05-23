@@ -1,0 +1,39 @@
+{
+  "name": "getman-api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first desktop API client inspired by the API Client Tool documentation bundle.",
+  "type": "module",
+  "main": "out/main/main.js",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "desktop:dev": "electron-vite dev",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "desktop:build": "tsc -p tsconfig.json --noEmit && electron-vite build",
+    "sqlite:rebuild": "set npm_config_runtime=electron&& set npm_config_target=37.2.3&& set npm_config_disturl=https://electronjs.org/headers&& npm rebuild better-sqlite3",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "@fluentui/react-components": "^9.68.0",
+    "@fluentui/react-icons": "^2.0.308",
+    "@monaco-editor/react": "^4.7.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "undici": "^7.13.0",
+    "zustand": "^5.0.7"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^12.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.15",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.7.0",
+    "electron": "^37.2.3",
+    "electron-vite": "^3.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
